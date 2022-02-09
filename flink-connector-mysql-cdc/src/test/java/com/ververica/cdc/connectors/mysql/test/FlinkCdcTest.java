@@ -6,6 +6,7 @@ import com.ververica.cdc.debezium.JsonDebeziumDeserializationSchema;
 import com.ververica.cdc.debezium.StringDebeziumDeserializationSchema;
 import com.ververica.cdc.debezium.table.RowDataDebeziumDeserializeSchema;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -29,7 +30,7 @@ public class FlinkCdcTest {
 //                .tableList("streamx.test_cdc")
                 .tableList("streamx.*\\..*,real_task_manage.*\\..*") // set captured table.*\\..*
 //                .startupOptions(StartupOptions.initial())
-//                .startupOptions(StartupOptions.latest())
+                .startupOptions(StartupOptions.latest())
                 .username("bigdata")
                 .password("bookface06")
                 .serverTimeZone("GMT+8")
@@ -58,6 +59,8 @@ public class FlinkCdcTest {
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
         env.getCheckpointConfig().setPreferCheckpointForRecovery(true);
+
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3,2000L));
         env.setStateBackend(new FsStateBackend("file:///tmp/flink/FlinkCdcTest/ck"));
 
         // enable checkpoint
